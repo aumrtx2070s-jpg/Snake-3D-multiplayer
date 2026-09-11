@@ -20,6 +20,9 @@ var myName = '';
 var roomCode = '';
 var grid = { w: 32, h: 24 };
 var snap = null;            // latest state message
+var snapAt = 0;             // performance.now() when `snap` arrived
+var tickMs = 83;            // server tick period, told to us on join
+var prevHeads = {};         // playerId -> [x,y] head cell from the *previous* snapshot
 var phase = 'lobby';       // 'lobby' | 'playing'
 var shareDismissed = false;
 
@@ -65,13 +68,25 @@ function handle(msg) {
     roomCode = msg.code;
     grid.w = msg.w;
     grid.h = msg.h;
+    tickMs = msg.tick_ms || tickMs;
     pendingIntent = null;
+    snap = null;
+    prevHeads = {};
     enterGame();
   } else if (msg.type === 'error') {
     showErr(msg.msg || 'เกิดข้อผิดพลาด');
     pendingIntent = null;
   } else if (msg.type === 'state') {
+    // remember where every head was, so the render loop can glide it
+    // smoothly into its new cell instead of snapping every tick
+    if (snap) {
+      for (var i = 0; i < snap.players.length; i++) {
+        var pp = snap.players[i];
+        if (pp.alive && pp.body.length) prevHeads[pp.id] = pp.body[0];
+      }
+    }
     snap = msg;
+    snapAt = performance.now();
     if (phase === 'playing') {
       updateScoreboard();
       updateToast();
@@ -352,6 +367,13 @@ var _c = new THREE.Color();
 function renderWorld(dt, elapsed) {
   var used = 0;
   if (snap && phase === 'playing') {
+    // fraction of the way from the previous tick to this one, right now -
+    // only the head actually needs this: every other body cell is a static
+    // grid square between ticks (the array just shifts), so lerping it
+    // would be a no-op anyway. this alone turns the 15Hz tick into
+    // something that reads as smooth motion instead of a step every ~66ms.
+    var t = Math.min(1, (performance.now() - snapAt) / tickMs);
+
     for (var pi = 0; pi < snap.players.length; pi++) {
       var p = snap.players[pi];
       if (!p.alive || !p.body.length) continue;
@@ -360,7 +382,17 @@ function renderWorld(dt, elapsed) {
         var seg = getSeg(used++);
         seg.visible = true;
         var cell = p.body[bi];
-        seg.position.set(wx(cell[0]), 0.45, wz(cell[1]));
+        var px = cell[0], py = cell[1];
+        if (bi === 0) {
+          var prev = prevHeads[p.id];
+          // a respawn teleports the head more than one cell away - never
+          // glide across the whole board for that, just cut instantly
+          if (prev && Math.abs(prev[0] - px) + Math.abs(prev[1] - py) <= 1) {
+            px = prev[0] + (px - prev[0]) * t;
+            py = prev[1] + (py - prev[1]) * t;
+          }
+        }
+        seg.position.set(wx(px), 0.45, wz(py));
         var head = bi === 0;
         var s = head ? 1.12 : 0.9 - Math.min(bi, 12) * 0.012;
         seg.scale.set(s, s, s);

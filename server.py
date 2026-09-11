@@ -31,7 +31,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # --------------------------------------------------------------- tuning knobs
 GRID_W, GRID_H = 32, 24          # play area, in cells
-TICK_HZ = 12                     # game steps per second (snake speed)
+TICK_HZ = 15                     # game steps per second (snake speed)
 START_LEN = 3                    # body length on every (re)spawn
 RESPAWN_SEC = 3.0               # dead time before you pop back in
 MAX_PLAYERS = 8                 # per room
@@ -39,6 +39,11 @@ APPLES_PER_ROOM = 4
 ROOM_IDLE_REAP_SEC = 60         # drop a room with no live connection this long
 CODE_LEN = 4
 CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # no 0/O/1/I ambiguity
+
+# A write that doesn't drain within this long marks the connection dead,
+# instead of blocking the one shared game-loop thread that broadcasts to
+# every room - one stalled player must never freeze everyone else's game.
+SEND_TIMEOUT = 1.5
 
 # One stable colour per seat, handed out in order as players join.
 PLAYER_COLORS = [
@@ -307,11 +312,15 @@ def game_loop():
 #  Minimal WebSocket connection (RFC 6455)
 # =====================================================================
 class WSConn:
-    def __init__(self, rfile, wfile):
+    def __init__(self, rfile, wfile, sock):
         self.rfile = rfile
         self.wfile = wfile
         self.open = True
         self._wlock = threading.Lock()
+        try:
+            sock.settimeout(SEND_TIMEOUT)
+        except OSError:
+            pass
 
     # -------------------------------------------------- outbound
     def send(self, text):
@@ -356,7 +365,11 @@ class WSConn:
     def _exact(self, n):
         buf = b""
         while len(buf) < n:
-            chunk = self.rfile.read(n - len(buf))
+            try:
+                chunk = self.rfile.read(n - len(buf))
+            except TimeoutError:
+                continue           # nothing arrived within SEND_TIMEOUT - keep waiting,
+                                    # this is normal for an idle player, not a dead one
             if not chunk:
                 raise ConnectionError("peer closed")
             buf += chunk
@@ -475,6 +488,7 @@ class Session:
             "color": player.color,
             "w": GRID_W,
             "h": GRID_H,
+            "tick_ms": round(1000 / TICK_HZ),
         })
 
     def cleanup(self):
@@ -565,7 +579,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Sec-WebSocket-Accept", accept)
         self.end_headers()
 
-        conn = WSConn(self.rfile, self.wfile)
+        conn = WSConn(self.rfile, self.wfile, self.connection)
         session = Session(conn)
         try:
             session.run()
