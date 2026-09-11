@@ -1,0 +1,141 @@
+/* Snake 3D - dark theme, tuned to match the 2D turtle game palette */
+:root{
+  --window:#0F1117;
+  --field:#171A23;
+  --line:#20242F;
+  --border:#3B4257;
+  --text:#E9ECF2;
+  --muted:#8A93A6;
+  --accent:#8BC34A;
+  --danger:#EF5350;
+  --card:#1B1F29;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  background:var(--window);
+  color:var(--text);
+  font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Thai",sans-serif;
+  -webkit-user-select:none;user-select:none;
+}
+
+#scene{position:fixed;inset:0}
+#scene canvas{display:block}
+
+/* -------------------------------------------------- in-game HUD */
+#hud{position:fixed;inset:0;pointer-events:none}
+
+#roombar{
+  position:absolute;top:14px;left:14px;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(20,23,32,.82);
+  border:1px solid var(--border);border-radius:10px;
+  padding:8px 10px;pointer-events:auto;backdrop-filter:blur(4px);
+}
+#roombar .label{color:var(--muted);font-size:12px}
+#roomcode{font:700 20px/1 "Consolas",ui-monospace,monospace;letter-spacing:3px;color:var(--accent)}
+#copybtn,#share-copy{
+  cursor:pointer;border:1px solid var(--border);border-radius:7px;
+  background:#232838;color:var(--text);padding:5px 9px;font-size:12px;
+}
+#copybtn:hover,#share-copy:hover{border-color:var(--accent)}
+
+#scoreboard{
+  position:absolute;top:14px;right:14px;margin:0;padding:8px 12px;
+  list-style:none;min-width:170px;
+  background:rgba(20,23,32,.82);
+  border:1px solid var(--border);border-radius:10px;backdrop-filter:blur(4px);
+}
+#scoreboard li{
+  display:flex;align-items:center;gap:8px;
+  padding:3px 0;font-size:14px;line-height:1.5;
+}
+#scoreboard li .dot{width:10px;height:10px;border-radius:3px;flex:none}
+#scoreboard li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#scoreboard li .sc{font-weight:700;font-variant-numeric:tabular-nums}
+#scoreboard li.me .nm{color:var(--accent)}
+#scoreboard li.dead{opacity:.45}
+
+#hint{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);
+  color:var(--muted);font-size:12px;pointer-events:none;
+}
+
+#toast{
+  position:fixed;left:50%;top:22%;transform:translateX(-50%);
+  background:rgba(20,23,32,.9);border:1px solid var(--danger);
+  color:var(--text);padding:12px 20px;border-radius:12px;
+  font-size:16px;text-align:center;pointer-events:none;
+}
+
+/* -------------------------------------------------- share card */
+#share{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:26px 34px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.share-cap{margin:0 0 6px;color:var(--muted);font-size:13px}
+#share-code{
+  font:800 46px/1 "Consolas",ui-monospace,monospace;letter-spacing:10px;
+  color:var(--accent);margin:4px 0 14px;padding-left:10px;
+}
+.share-sub{margin:12px 0 0;color:var(--muted);font-size:12px}
+
+/* -------------------------------------------------- lobby */
+#lobby{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;
+  background:radial-gradient(120% 90% at 50% 0%,#161a24 0%,var(--window) 70%);
+}
+#lobby.hidden{display:none}
+
+.card{
+  width:340px;max-width:calc(100vw - 32px);
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:26px 26px 22px;box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.card h1{
+  margin:0 0 2px;font-size:34px;letter-spacing:4px;font-weight:800;
+}
+.card h1 span{color:var(--accent)}
+.tag{margin:0 0 18px;color:var(--muted);font-size:13px}
+
+.card label{display:block;margin:14px 0 6px;font-size:12px;color:var(--muted)}
+.card input{
+  width:100%;padding:11px 12px;border-radius:10px;
+  border:1px solid var(--border);background:#12151d;color:var(--text);
+  font-size:15px;outline:none;
+}
+.card input:focus{border-color:var(--accent)}
+#code{text-transform:uppercase;letter-spacing:6px;font-family:"Consolas",monospace;text-align:center}
+
+.card button{
+  width:100%;margin-top:14px;padding:11px 12px;border-radius:10px;
+  border:1px solid var(--border);background:#232838;color:var(--text);
+  font-size:15px;font-weight:600;cursor:pointer;
+}
+.card button:hover{border-color:var(--accent)}
+.card button.primary{background:var(--accent);color:#10240a;border-color:var(--accent)}
+.card button.primary:hover{filter:brightness(1.08)}
+
+.or{display:flex;align-items:center;gap:10px;margin:18px 0 2px;color:var(--muted);font-size:11px}
+.or::before,.or::after{content:"";height:1px;background:var(--border);flex:1}
+
+.joinrow{display:flex;gap:8px}
+.joinrow input{flex:1}
+.joinrow button{width:auto;margin-top:0;padding:11px 16px;white-space:nowrap}
+
+.err{margin:12px 0 0;color:var(--danger);font-size:13px;text-align:center}
+.status{margin:10px 0 0;color:var(--muted);font-size:11px;text-align:center}
+
+.foot{
+  max-width:420px;margin:0;padding:0 16px;text-align:center;
+  color:var(--muted);font-size:12px;line-height:1.6;
+}
+
+@media (max-width:420px){
+  #scoreboard{min-width:132px;font-size:13px}
+  #share{padding:20px 22px}
+  #share-code{font-size:36px;letter-spacing:7px}
+}

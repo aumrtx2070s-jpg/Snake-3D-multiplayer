@@ -1,0 +1,2 @@
+# Snake 3D server uses only the Python standard library - nothing to install.
+# This file exists so Render detects the service as Python.

@@ -1,0 +1,15 @@
+# Render Blueprint for the Snake 3D server.
+# In the Render dashboard: New +  ->  Blueprint  ->  pick this repo.
+# If this folder is not the repo root, set the service's Root Directory
+# to  snake3d  so Render finds server.py and this file.
+services:
+  - type: web
+    name: snake3d
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"   # requirements.txt is empty -> no-op
+    startCommand: "python server.py"
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Snake 3D</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="scene"></div>
+
+<!-- in-game HUD -------------------------------------------------------- -->
+<div id="hud" hidden>
+  <div id="roombar">
+    <span class="label">ห้อง</span>
+    <span id="roomcode">----</span>
+    <button id="copybtn" type="button">คัดลอก</button>
+  </div>
+  <ol id="scoreboard"></ol>
+</div>
+
+<div id="hint" hidden>ลูกศร หรือ W A S D เพื่อเลี้ยว</div>
+
+<div id="toast" hidden></div>
+
+<!-- "share this code" card, shown until a 2nd player joins ------------- -->
+<div id="share" hidden>
+  <p class="share-cap">แชร์รหัสนี้ให้เพื่อน</p>
+  <div id="share-code">----</div>
+  <button id="share-copy" type="button">คัดลอกรหัส</button>
+  <p class="share-sub">กดปุ่มลูกศรเพื่อเริ่มเล่นได้เลย</p>
+</div>
+
+<!-- lobby ------------------------------------------------------------- -->
+<div id="lobby">
+  <div class="card">
+    <h1>SNAKE <span>3D</span></h1>
+    <p class="tag">งูหลายคน เล่นข้ามเน็ต ผ่านรหัสห้อง</p>
+
+    <label for="name">ชื่อเล่น</label>
+    <input id="name" type="text" maxlength="16" autocomplete="off" placeholder="ตั้งชื่อ...">
+
+    <button id="create" type="button" class="primary">สร้างห้องใหม่</button>
+
+    <div class="or"><span>หรือ</span></div>
+
+    <label for="code">เข้าห้องด้วยรหัส</label>
+    <div class="joinrow">
+      <input id="code" type="text" maxlength="4" autocomplete="off"
+             autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+      <button id="join" type="button">เข้าห้อง</button>
+    </div>
+
+    <p id="err" class="err" hidden></p>
+    <p id="status" class="status">กำลังเชื่อมต่อ...</p>
+  </div>
+  <p class="foot">กติกา: กินแอปเปิลเพื่อโตและทำแต้ม ชนกำแพงหรือชนตัวงู = ตาย แล้วเกิดใหม่ใน 3 วินาที</p>
+</div>
+
+<script src="three.min.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
